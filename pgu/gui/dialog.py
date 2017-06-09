@@ -64,17 +64,22 @@ class Dialog(table.Table):
 class FileDialog(Dialog):
     """A file picker dialog window."""
     
-    def __init__(self, title_txt="File Browser", button_txt="Okay", cls="dialog", path=None):
+    def __init__(self, title_txt="File Browser", button_txt="Okay", cls="dialog", path=None, file_types=None,
+                 hide_dot=False):
         """FileDialog constructor.
 
         Keyword arguments:
             title_txt -- title text
             button_txt -- button text
             path -- initial path
+            file_types -- list of extensions
+            hide_dot -- hide . and .. folders
 
         """
 
         cls1 = "filedialog"
+        self.filter = file_types
+        self.hide_dot = hide_dot
         if not path: self.curdir = os.getcwd()
         else: self.curdir = path
         self.dir_img = basic.Image(
@@ -112,8 +117,17 @@ class FileDialog(Dialog):
         files = []
         try:
             for i in os.listdir(self.curdir):
-                if os.path.isdir(os.path.join(self.curdir, i)): dirs.append(i)
-                else: files.append(i)
+                if self.hide_dot and i[0] == '.':
+                    continue
+                elif os.path.isdir(os.path.join(self.curdir, i)):
+                    dirs.append(i)
+                else:
+                    if self.filter is not None:
+                        ext = os.path.splitext(i)[1]
+                        if ext.lower() in self.filter:
+                            files.append(i)
+                    else:
+                        files.append(i)
         except:
             self.input_file.value = "Opps! no access"
         #if '..' not in dirs: dirs.append('..')
